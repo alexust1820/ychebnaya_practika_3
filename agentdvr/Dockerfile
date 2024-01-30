@@ -1,0 +1,2 @@
+FROM mekayelanik/ispyagentdvr:latest
+

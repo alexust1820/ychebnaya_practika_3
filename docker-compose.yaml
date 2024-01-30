@@ -1,0 +1,98 @@
+version: "3"
+services:
+
+  asterisk:
+    build: ./asterisk
+    ports:
+      - "5060:5060/udp"
+      - "10000-10003:10000-10003/udp"
+    container_name: asterisk
+    restart: unless-stopped
+    command: /bin/startup.sh
+    tty: true
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.2
+
+  samba:
+    build: ./samba
+    ports:
+      - "139:139"
+      - "445:445"
+    container_name: samba
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.3
+    command: /bin/startup.sh
+    volumes:
+      - kustsambadata:/media
+    tty: true
+  
+  agentdvr:
+    image: mekayelanik/ispyagentdvr:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+    volumes:
+      - ipcam:/AgentDVR/Media/XML
+      - ipcam:/AgentDVR/Media/WebServerRoot/Media
+      - ipcam:/AgentDVR/Commands
+    ports:
+      - '8090:8090'
+      - '3478:3478/udp'
+      - '50000-50010:50000-50010/udp'
+    container_name: agentdvr
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.4
+
+  nginx-one:
+    build: ./nginx/
+    volumes:
+      - nginx-web-data:/mnt
+    ports:
+      - '80'
+    container_name: nginx-one
+    command: /bin/startup.sh
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.10
+
+  nginx-two:
+    build: ./nginx/
+    volumes:
+      - nginx-web-data:/mnt
+    ports:
+      - '80'
+    container_name: nginx-two
+    command: /bin/startup.sh
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.20
+
+  nginx-proxy:
+    build: ./nginx-proxy/
+    ports:
+      - '80:80'
+    container_name: nginx-proxy
+    command: /bin/startup.sh
+    networks:
+      kustov0:
+        ipv4_address: 10.9.2.30
+
+networks:
+  kustov0:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.9.2.0/24
+
+volumes:
+  kustsambadata:
+    external: true
+  ipcam:
+    external: true
+  nginx-web-data:
+    external: true

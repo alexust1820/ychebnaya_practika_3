@@ -1,0 +1,28 @@
+version: "3"
+services:
+  ispyagentdvr:
+    image: mekayelanik/ispyagentdvr:latest
+    container_name: agentdvr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Moscow
+    volumes:
+      - ipcam:/AgentDVR/Media/XML
+      - ipcam:/AgentDVR/Media/WebServerRoot/Media
+      - ipcam:/AgentDVR/Commands
+    ports:
+      - 8090:8090
+      - 3478:3478/udp
+      - 50000-50010:50000-50010/udp
+    restart: unless-stopped
+    networks:
+      - kust0
+
+networks:
+  kust0:
+    external: true
+
+volumes:
+  ipcam:
+    external: true
